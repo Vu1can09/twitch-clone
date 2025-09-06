@@ -15,7 +15,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Twith Clone",
+  title: "Twitch Clone",
   description: "My version of Twitch",
 };
 

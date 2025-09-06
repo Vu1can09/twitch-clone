@@ -35,6 +35,10 @@ type DatabaseContextType = {
     deleteLiveStream: (userName: string) => Promise<boolean>;
     setLiveStreamsMockData: () => void;
     removeLiveStreamsMockData: () => void;
+    followUser:(
+      currentUserId:string,
+      userToFollowId:string
+    )=>Promise<boolean>;
 };
 
 export const DatabaseContext = createContext<DatabaseContextType | null>(null);
@@ -245,6 +249,84 @@ export const DatabaseProvider = ({
     }
   }, [supabase]);
 
+  const followUser = useCallback(
+    async (currentUserId: string, userToFollowId: string): Promise<boolean> => {
+      if (!supabase) {
+        console.error('[followUser] Supabase not initialized');
+        return false;
+      }
+
+      try {
+        const currentUser = await getUserData(currentUserId, 'user_id');
+        if (!currentUser) {
+          console.error('[followUser] Current user not found');
+          return false;
+        }
+
+        const userToFollow = await getUserData(userToFollowId, 'user_name');
+        if (!userToFollow) {
+          console.error('[followUser] User to follow not found');
+          return false;
+        }
+
+        // Update following lists
+        let updatedCurrentUserFollowing: string[] = [];
+        let updatedUserToFollowFollowers: string[] = [];
+        if (currentUser.following.includes(userToFollowId)) {
+          // Remove from the lists if already following
+          updatedCurrentUserFollowing = currentUser.following.filter(
+            (id) => id !== userToFollow.user_id
+          );
+          updatedUserToFollowFollowers = userToFollow.followers.filter(
+            (id) => id !== currentUserId
+          );
+        } else {
+          // If not following, add to following list
+          updatedCurrentUserFollowing = [
+            ...currentUser.following,
+            userToFollowId,
+          ];
+          updatedUserToFollowFollowers = [
+            ...userToFollow.followers,
+            currentUserId,
+          ];
+        }
+
+        const { error: currentUserError } = await supabase
+          .from('users')
+          .update({ following: updatedCurrentUserFollowing })
+          .eq('user_id', currentUserId);
+
+        if (currentUserError) {
+          console.error(
+            '[followUser] Error updating current user following',
+            currentUserError
+          );
+          return false;
+        }
+
+        const { error: userToFollowError } = await supabase
+          .from('users')
+          .update({ followers: updatedUserToFollowFollowers })
+          .eq('user_id', userToFollow.user_id);
+
+        if (userToFollowError) {
+          console.error(
+            '[followUser] Error updating user to follow followers',
+            userToFollowError
+          );
+          return false;
+        }
+
+        console.log('[followUser] Successfully followed user');
+        return true;
+      } catch (error) {
+        console.error('[followUser] Error following user', error);
+        return false;
+      }
+    },
+    [supabase, getUserData]
+  );
 
 
     return (
@@ -260,6 +342,7 @@ export const DatabaseProvider = ({
         deleteLiveStream,
         setLiveStreamsMockData,
         removeLiveStreamsMockData,
+        followUser
         }}
         >
             {children}
