@@ -126,7 +126,7 @@ export const DatabaseProvider = ({
         .select()
         .single();
       if (error) {
-        console.error('Error setting user data', error);
+        
         setError(`Error setting user data: ${error.message}`);
         return null;
       }

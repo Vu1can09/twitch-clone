@@ -14,7 +14,7 @@
     "@stream-io/node-sdk": "^0.6.2",
     "@stream-io/video-client": "^1.28.1",
     "@stream-io/video-react-bindings": "^1.7.16",
-    "@stream-io/video-react-sdk": "^1.20.1",
+    "@stream-io/video-react-sdk": "^1.20.2",
     "@supabase/supabase-js": "^2.56.0",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
